@@ -16,8 +16,7 @@ fn setup_price_feed_oracle<'a>(
     decimals: u32,
     resolution: u32,
 ) -> (Address, MockOracleClient<'a>) {
-    let oracle_id = Address::generate(env);
-    env.register_contract(&oracle_id, MockOracle {});
+    let oracle_id = env.register(MockOracle {}, ());
     let oracle_client = MockOracleClient::new(env, &oracle_id);
     oracle_client.set_data(admin, base, assets, &decimals, &resolution);
     (oracle_id, oracle_client)
@@ -31,7 +30,7 @@ fn test_stable_price_feed() {
     let start_block = 123;
     env.ledger().set(LedgerInfo {
         timestamp: start_time,
-        protocol_version: 20,
+        protocol_version: 22,
         sequence_number: start_block,
         network_id: Default::default(),
         base_reserve: 10,
@@ -69,7 +68,7 @@ fn test_stable_price_feed() {
     // pass time
     env.ledger().set(LedgerInfo {
         timestamp: start_time + 6 * 24 * 60 * 60,
-        protocol_version: 20,
+        protocol_version: 22,
         sequence_number: start_block + (6 * 24 * 60 * 60) / 5,
         network_id: Default::default(),
         base_reserve: 10,
@@ -96,7 +95,7 @@ fn test_price_feed() {
     let start_block = 123;
     env.ledger().set(LedgerInfo {
         timestamp: start_time,
-        protocol_version: 20,
+        protocol_version: 22,
         sequence_number: start_block,
         network_id: Default::default(),
         base_reserve: 10,
@@ -134,7 +133,7 @@ fn test_price_feed() {
     // pass time
     env.ledger().set(LedgerInfo {
         timestamp: start_time + 325,
-        protocol_version: 20,
+        protocol_version: 22,
         sequence_number: start_block + 325 / 5,
         network_id: Default::default(),
         base_reserve: 10,
