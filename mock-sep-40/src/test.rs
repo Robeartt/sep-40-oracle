@@ -173,6 +173,16 @@ fn test_price_feed() {
     assert_eq!(result_2.price, prices_1.get_unchecked(1));
     assert_eq!(result_2.timestamp, start_time);
 
+    // verify timestamp is normalized to the most recent price
+    // older than the requested timestamp
+    let result_1 = oracle_client.price(&asset_1, &(100 + start_time)).unwrap();
+    assert_eq!(result_1.price, prices_1.get_unchecked(0));
+    assert_eq!(result_1.timestamp, start_time);
+
+    let result_2 = oracle_client.price(&asset_2, &(250 + start_time)).unwrap();
+    assert_eq!(result_2.price, prices_1.get_unchecked(1));
+    assert_eq!(result_2.timestamp, start_time);
+
     // verify get prices can fetch both
     let result_1_vec = oracle_client.prices(&asset_1, &2).unwrap();
     assert_eq!(result_1_vec.len(), 2);
@@ -191,4 +201,16 @@ fn test_price_feed() {
     let result_2_1 = result_2_vec.get_unchecked(1);
     assert_eq!(result_2_1.price, prices_1.get_unchecked(1));
     assert_eq!(result_2_1.timestamp, start_time);
+
+    // verify un-normalized timestamps get set to the most recent normalized timestamp
+    let prices_3: Vec<i128> = vec![&env, 96_214_7654321, 1_0940921];
+    oracle_client.set_price(&prices_3, &(start_time + 600 + 100));
+
+    let result_1 = oracle_client.lastprice(&asset_1).unwrap();
+    assert_eq!(result_1.price, prices_3.get_unchecked(0));
+    assert_eq!(result_1.timestamp, start_time + 600);
+
+    let result_2 = oracle_client.lastprice(&asset_2).unwrap();
+    assert_eq!(result_2.price, prices_3.get_unchecked(1));
+    assert_eq!(result_2.timestamp, start_time + 600);
 }
