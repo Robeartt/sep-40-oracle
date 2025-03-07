@@ -26,6 +26,8 @@ trait MockPriceFeed {
 
     /// Sets the mocked price for an asset at a given timestamp.
     ///
+    /// The timestamp will be normalized to the most recent resolution ledger.
+    ///
     /// The prices are defined in the same order as the assets the oracle supports.
     fn set_price(env: Env, prices: Vec<i128>, timestamp: u64);
 
@@ -69,9 +71,12 @@ impl MockPriceFeed for MockOracle {
         let admin = storage::get_admin(&env);
         admin.require_auth();
 
+        let resolution = storage::get_resolution(&env) as u64;
+        let normalized_timestamp = (timestamp / resolution) * resolution;
+
         storage::extend_instance(&env);
-        storage::set_last_timestamp(&env, timestamp);
-        set_prices(&env, prices, timestamp);
+        storage::set_last_timestamp(&env, normalized_timestamp);
+        set_prices(&env, prices, normalized_timestamp);
     }
 
     fn set_price_stable(env: Env, prices: Vec<i128>) {
@@ -103,7 +108,12 @@ impl PriceFeedTrait for MockOracle {
     }
 
     fn price(env: Env, asset: Asset, timestamp: u64) -> Option<PriceData> {
-        get_price_data_asset(&env, &asset, timestamp)
+        let resolution = storage::get_resolution(&env) as u64;
+        if timestamp == 0 || resolution == 0 {
+            return None;
+        }
+        let normalized_timestamp = (timestamp / resolution) * resolution;
+        get_price_data_asset(&env, &asset, normalized_timestamp)
     }
 
     fn prices(env: Env, asset: Asset, records: u32) -> Option<Vec<PriceData>> {
