@@ -65,6 +65,9 @@ fn test_stable_price_feed() {
     assert_eq!(price_2.price, prices.get_unchecked(1));
     assert_eq!(price_2.timestamp, start_time);
 
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time);
+
     // pass time
     env.ledger().set(LedgerInfo {
         timestamp: start_time + 6 * 24 * 60 * 60,
@@ -85,6 +88,9 @@ fn test_stable_price_feed() {
     let price_2 = oracle_client.lastprice(&asset_2).unwrap();
     assert_eq!(price_2.price, prices.get_unchecked(1));
     assert_eq!(price_2.timestamp, start_time + 6 * 24 * 60 * 60);
+
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time + 6 * 24 * 60 * 60);
 }
 
 #[test]
@@ -130,6 +136,9 @@ fn test_price_feed() {
     assert_eq!(result_2.price, prices_1.get_unchecked(1));
     assert_eq!(result_2.timestamp, start_time);
 
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time);
+
     // pass time
     env.ledger().set(LedgerInfo {
         timestamp: start_time + 325,
@@ -142,7 +151,7 @@ fn test_price_feed() {
         max_entry_ttl: 6312000,
     });
 
-    // verify price data can still be fetched and timestamp does not
+    // verify price data can still be fetched and timestamp does not change
     let result_1 = oracle_client.lastprice(&asset_1).unwrap();
     assert_eq!(result_1.price, prices_1.get_unchecked(0));
     assert_eq!(result_1.timestamp, start_time);
@@ -150,6 +159,9 @@ fn test_price_feed() {
     let result_2 = oracle_client.lastprice(&asset_2).unwrap();
     assert_eq!(result_2.price, prices_1.get_unchecked(1));
     assert_eq!(result_2.timestamp, start_time);
+
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time);
 
     // set another round of prices
     let prices_2: Vec<i128> = vec![&env, 95_214_7654321, 1_1040921];
@@ -163,6 +175,9 @@ fn test_price_feed() {
     let result_2 = oracle_client.lastprice(&asset_2).unwrap();
     assert_eq!(result_2.price, prices_2.get_unchecked(1));
     assert_eq!(result_2.timestamp, start_time + 300);
+
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time + 300);
 
     // verify old prices can be fetched
     let result_1 = oracle_client.price(&asset_1, &start_time).unwrap();
@@ -213,4 +228,7 @@ fn test_price_feed() {
     let result_2 = oracle_client.lastprice(&asset_2).unwrap();
     assert_eq!(result_2.price, prices_3.get_unchecked(1));
     assert_eq!(result_2.timestamp, start_time + 600);
+
+    let last_timestamp = oracle_client.last_timestamp();
+    assert_eq!(last_timestamp, start_time + 600);
 }
