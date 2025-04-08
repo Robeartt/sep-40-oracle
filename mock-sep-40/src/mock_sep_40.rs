@@ -37,6 +37,10 @@ trait MockPriceFeed {
     ///
     /// This price will be ignored if `set_price` is called, until `set_price_stable` is called again.
     fn set_price_stable(env: Env, prices: Vec<i128>);
+
+    /// Get the last timestamp the oracle was updated. This either returns the most recent
+    /// timestamp from `set_price` or the current ledger timestamp if `set_price_stable` was called last.
+    fn last_timestamp(env: Env) -> u64;
 }
 
 #[contractimpl]
@@ -86,6 +90,15 @@ impl MockPriceFeed for MockOracle {
         storage::extend_instance(&env);
         storage::set_last_timestamp(&env, 0);
         set_prices(&env, prices, 0);
+    }
+
+    fn last_timestamp(env: Env) -> u64 {
+        let timestamp = storage::get_last_timestamp(&env);
+        if timestamp == 0 {
+            env.ledger().timestamp()
+        } else {
+            timestamp
+        }
     }
 }
 
